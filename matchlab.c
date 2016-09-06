@@ -5,14 +5,16 @@ typedef int bool;
 #define true 1
 #define false 0
 
-    bool a_flag;
-    bool b_flag;
-    bool c_flag;
-    bool t_flag;
-    bool no_arg;
-    int flag_count = 0;
+bool a_flag;
+bool b_flag;
+bool c_flag;
+bool t_flag;
+bool no_arg;
+int flag_count = 0;
 int parse_algo(char target_string[])
 {
+
+    const int length_int = strlen(target_string);
     //-----------------------A mode test-------------------------------- 
     //printf("a_flag: %i b_flag: %i c_flag: %i\n", a_flag, b_flag, c_flag);
     if(a_flag)
@@ -22,7 +24,6 @@ int parse_algo(char target_string[])
         //an odd number of uppercase letters.
         //printf("a flag hit");
         int i;
-        int arg_len  = strlen(target_string);
         int z_count = 0;
         int upper_count = 0;
         int e_end = 0;
@@ -36,10 +37,10 @@ int parse_algo(char target_string[])
         bool z_prev = 0;
         bool cap_prev = 0;
 
-        /*printf("%i", arg_len);*/
+        /*printf("%i", length_int);*/
 
         // iterate collecting info
-        for(i = 0; i < arg_len; i++)
+        for(i = 0; i < length_int; i++)
         {
             // e check
             if(target_string[i] == 'e' )
@@ -47,7 +48,7 @@ int parse_algo(char target_string[])
                 //checks for prev e or position
                 if(e_prev == 1 || i == 0)
                 {
-                // checks position of e  
+                    // checks position of e  
                     if(i <= 2)
                     {
                         e_check = 1;
@@ -95,58 +96,68 @@ int parse_algo(char target_string[])
                         u_check = 0;
                 }
 
-                
+
             }
 
         }
-    //printf("echeck: %i zcheck: %i ucheck: %i", e_check, z_check, u_check);
-    //
-    if(e_check && z_check && u_check)
-    {
-        if(t_flag)
+        //printf("echeck: %i zcheck: %i ucheck: %i", e_check, z_check, u_check);
+        //
+        if(e_check && z_check && u_check)
         {
-            for (i=0; i< arg_len; i++)
-                if(target_string[i] == 'D')
-                    printf("%c", 'H');
-                else if(target_string[i] == 'H')
-                    printf("%c", 'D');
-                else
-                    printf("%c", target_string[i]);
+            if(t_flag)
+            {
+                for (i=0; i< length_int; i++)
+                    if(target_string[i] == 'D')
+                        printf("%c", 'H');
+                    else if(target_string[i] == 'H')
+                        printf("%c", 'D');
+                    else
+                        printf("%c", target_string[i]);
+            }
+            else
+                printf("%s", "yes");
         }
         else
-            printf("%s", "yes");
-    }
-    else
-        printf("%s", "no");
+            printf("%s", "no");
     }
     //-----------------------B mode test-------------------------------- 
     if(b_flag)
     {
         //printf("b flag test hit");
-        b_flag = 0;
 
+        // boolean flags for final check
         bool upper_odd_flag = 0;
-        bool upper_count = 0;
+        bool upper_even_flag = 0;
         bool e_flag = 0;
-        bool e_prev = 0;
         bool p_flag = 0;
-        bool even_upper_flag = 0;
         bool dec_flag = 0;
+        bool u_flag = 0;
 
+        //boolean checks for previous values (sequencing of regex expression)
+        bool e_prev = 0;
+        bool p_prev = 0;
+        bool dec_prev = 0;
+        bool upper_odd_prev = 0;
+        bool upper_even_prev = 0;
+
+        // misc counters
         int j;
         int i;
+        int l;
 
+        int upper_odd_count = 0;
+        int upper_even_count = 0;
         int p_count = 0;
         int e_end = 0;
-        int X_end;
+        int x_end = 0;
         int dec_count = 0;
-        const int length_int = strlen(target_string);
 
-        char upper_string[100];
+        char upper_odd_string[100];
+        char upper_even_string[100];
 
         //printf("%i", length_int);
 
-                
+
         //printf("%s", target_string);
         for(i = 0; i < length_int ; i++)
         {
@@ -155,45 +166,86 @@ int parse_algo(char target_string[])
             if(target_string[i] == 'e')
                 if(i==0 || e_prev == 1)
                 {
-                    e_prev = 1;
                     e_end++;
-                    e_flag = 1;
+                    e_flag = 1; 
+                    e_prev = 1;
+                    dec_prev = 0;
                 }
                 else
                     e_flag = 0;
-            
+
+
             //checks for upper case string for 'X' 
             if (target_string[i] >= 'A' && target_string[i] <= 'Z')
             {
                 if(i >= e_end)
-                {
-                    upper_string[upper_count] = target_string[i];
-                    upper_count++;
-                }
+                    // if previous was e, put in upper odd string array
+                    if(e_prev || i==0)
+                    {
+                        upper_odd_string[upper_odd_count] = target_string[i];
+                        upper_odd_count++;
+                        upper_odd_prev = 1;
+                        upper_even_prev = 0;
+                    }
+                // else put in even string array (post decimals)
+                    else if(dec_prev || upper_even_prev)
+                    {
+                        upper_even_string[upper_even_count] = target_string[i];
+                        upper_even_count++;
+                        upper_even_prev = 1;
+                        upper_odd_prev = 0;
+                    }
+                    else
+                        u_flag = 0;
                 else
-                    u_check = 0;
+                    u_flag = 0;
             }
-            // checks for p requirement
+            // checks for p )equirement
             if(target_string[i] == 'p')
             {
-                p_count++;
+                if(i>= upper_odd_count && upper_odd_prev)
+                {
+                    p_count++;
+                    p_prev = 1;
+                    p_flag = 1;
+                }
+                else
+                    p_flag = 0;
+
             }
             // checks for decimal digit
             if(target_string[i]>= 48 && target_string[i] <= 57)
             {
                 dec_count++;
+                dec_prev = 1;
+                e_prev = 0;
+            }
+            else
+                dec_prev = 0;          
+        }
+        upper_odd_string[++upper_odd_count] = '\0';  
+        upper_even_string[++upper_even_count] = '\0';
+
+        // boolean and counter checks
+        // checks caps
+        int k = strlen(upper_odd_string);
+        for(i = 0; i < k; i++ )
+        { 
+            if((i & 1)==0)
+            { 
+                j = i >> 1;
+                //printf(" %c:%c ", upper_odd_string[i], upper_even_string[j]);
+                if(upper_odd_string[i] == upper_even_string[j])
+                {
+                    u_flag = 1;
+                }
+                else
+                    u_flag = 0;
             }
 
-            
-            
         }
-        
-            //printf("%s", upper_string);
 
-
-        // boolean checks
-        if(upper_odd_flag & 1 == 1)
-            upper_odd_flag = 1;
+        //checks number of deimals
         if(dec_count > 0 && dec_count < 4)
             dec_flag = 1;
 
@@ -201,29 +253,171 @@ int parse_algo(char target_string[])
         {
             p_flag = 1;
         }
-        //printf("uf: %i pf: %i df: %i", upper_odd_flag, p_flag, dec_flag);
+        else 
+            p_flag = 0;
+        // printf("ef: %i uof: %i pf: %i df: %i\n",e_flag, u_flag, p_flag, dec_flag);
         //TODO add -t flag check
-        if(e_flag)
+        if(e_flag &&  p_flag && u_flag)
         {
-            // number insertion based on index
-        for(j = 0; j < length_int; j++)
-        { 
-            printf("%c", target_string[j]);
-            printf("%i", j); 
+            if(t_flag)
+            {
+                // number insertion based on index
+                for(j = 0; j < length_int; j++)
+                { 
+                    printf("%c", target_string[j]);
+                    l = j & 7;
+                    printf("%i", l ); 
+                }
+            }
+            else
+                printf("%s", "yes");
         }
-        }
+        else
+            printf("%s", "no");
     } 
 
 
 
     //-----------------------C mode test-------------------------------- 
     if(c_flag)
-    {
-        printf("c flag test hit");
-        c_flag = 0;
+    {      
+        bool a_check; // broke naming convention because a_flag was used previously
+        bool z_flag;
+        bool dec_flag;
+        bool upper_flag;
+
+        bool a_prev;
+        bool x_prev;
+        bool x_rev_prev;
+        bool z_prev;
+        bool inp_flag;
+
+        int i;
+        int j;
+        int a_count = 0;
+        int x_count = 0;
+        int x_rev_count = 0;
+        int dec_count = 0;
+        int z_count = 0;
+        
+        char x_string[100];
+        char x_rev_string[100];
+        
+        for( i = 0; i < length_int; i++ )
+        {
+            if('a' == target_string[i])
+            {
+                //printf("%s", "found a");
+                if(target_string[0] == 'a')
+                    if(i == 0 || a_prev)
+                    {
+                        a_count++;
+                        a_prev = 1;
+                        if(a_count >= 3 && a_count <= 6)
+                            a_check = 1;
+                        else
+                            a_check = 0;
+                    }
+                    
+                else
+                    a_check = 0;
+                //printf("%d", a_count);
+            }
+            if(target_string[i] >= 'A' && target_string[i] <= 'Z')
+            {
+                if(a_prev || x_prev)
+                {
+                    x_string[x_count] = target_string[i];
+                    x_count++;
+                    x_prev = 1;
+                    x_rev_prev = 0;
+                    a_prev = 0;
+                }
+                else if(z_prev || x_rev_prev)
+                {
+                    x_rev_string[x_rev_count] = target_string[i];
+                    x_rev_count++;
+                    x_rev_prev = 1;
+                    x_prev = 0;
+                    a_prev = 0;
+                }
+                else
+                {
+                upper_flag = 0;
+                a_prev = 0;
+                z_prev = 0;
+                }
+
+            }
+            if(target_string[i] == 'z')
+            {
+                if(x_prev || z_prev)
+                {
+                    z_count++;
+                    z_prev = 1;
+                    x_prev = 0;
+                    a_prev = 0;
+                }
+                else
+                    z_flag = 0;
+            }
+            if(target_string[i]>= '0' && target_string[i] <= '9')
+                if(x_rev_prev)
+                {
+                    ++dec_count;
+                    if(dec_count >=1 && dec_count <=3)
+                        {
+                           dec_flag = 1;
+                        }
+                    else
+                        dec_flag = 0;
+                }
+                else 
+                    dec_flag = 0;
+            }
+        //checks for input outside allowed scope
+        if(target_string != '\0'){    
+            if(target_string[i] != 'a' && (target_string[i] < 'A' || target_string[i] > 'Z') && (target_string[i] < '0' || target_string[i] > '9') && target_string[i] != 'z' && target_string[i] != '\0')
+                inp_flag = 0;
+            else inp_flag = 1;
+        }
+
+        //printf("%i: %i", x_count, x_rev_count);
+        // checks string for reversal
+        if(x_count == x_rev_count)
+        {
+            //printf("%s", "counts equal");
+            j = x_rev_count-1;
+            for(i = 0; i < x_count; i++)
+            {
+                //printf("i: %i:%c, j: %i:%c", i, x_string[i], j, x_rev_string[j]);
+                if(x_string[i] == x_rev_string[j])
+                    upper_flag = 1;
+                else
+                    upper_flag = 0;
+                j--;
+                
+            }
+        }
+        else upper_flag = 0;
+        //boolean checks
+        // odd check for x string
+        if((x_count & 1) == 0)
+            upper_flag = 0;
+        // odd check for z 
+        if((z_count & 1)==0)
+            z_flag = 0;
+        
+        
+       printf("acheck: %i uppercheck: %i inp_flag: %i", a_check, upper_flag, inp_flag); 
+        if(a_check && upper_flag && inp_flag)
+        {
+            printf("%s\n", target_string);
+        }
+        //TODO odd z check
+        //TODO digit check
+        //TODO cap letter comparison
     }
-
-
 
     return 0;
 }
@@ -233,14 +427,14 @@ int parse_algo(char target_string[])
 int main(int argc, char** argv)
 {    
     int i;
-    
-/*printf("argc = %i", argc);*/
-/*printf("0 arg: %s", argv[0]);*/
-/*printf("1 arg: %s", argv[1]);*/
+
+    /*printf("argc = %i", argc);*/
+    /*printf("0 arg: %s", argv[0]);*/
+    /*printf("1 arg: %s", argv[1]);*/
     // if more than one arg
     if(argc > 1)
     {
-    // for each argument
+        // for each argument
         for(i=1; i < argc; i++)
         {   
             int j = 0;
@@ -265,7 +459,7 @@ int main(int argc, char** argv)
                             b_flag = true;
                             break;
                         case 'c':
-                            printf("found c\n");  
+                            //printf("found c\n");  
                             j++;
                             c_flag = true;
                             break;
@@ -286,21 +480,23 @@ int main(int argc, char** argv)
                         a_flag = 1;
                     }
                     //printf("argument found");
+
+                    //printf("%s", argv[i]);
                     parse_algo(argv[i]);
                     break; 
-                
+
                 }
 
                 /*printf("%s", argv[i]);*/
 
             }
         }
-        
+
     }
     else
     {
-    //run default
-    printf("no-arg case hit");
+        //run default
+        printf("no-arg case hit");
     }
 
     /*char* amode*/
